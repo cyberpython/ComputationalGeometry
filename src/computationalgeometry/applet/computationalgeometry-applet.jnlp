@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jnlp spec="1.0+" codebase="" href="">
+    <information>
+        <title>Computational Geometry</title>
+        <vendor>Georgios Migdos</vendor>
+    </information>
+    <resources>
+        <!-- Application Resources -->
+        <j2se version="1.6+"
+              href="http://java.sun.com/products/autodl/j2se"/>
+        <jar href="ComputationalGeometry.jar" main="true" />
+
+    </resources>
+    <applet-desc 
+         name="Computational Geometry Applet"
+         main-class="aueb.geom.ui.ComputationalGeometryApplet"
+         width="500"
+         height="400">
+     </applet-desc>
+     <update check="background"/>
+</jnlp>
