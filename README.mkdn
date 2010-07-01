@@ -76,7 +76,7 @@ PUSH(p2,S);
 for i=3 to m do
 { while ccw(N‐TOP(S),TOP(S),pi) <= 0
           do POP(S);
-     PUSH(pi,S);
+  PUSH(pi,S);
 }
 return S;
 ------------------------------------  END  -------------------------------------
