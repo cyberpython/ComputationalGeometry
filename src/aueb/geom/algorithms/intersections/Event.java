@@ -58,7 +58,6 @@ public class Event {
         return type.name() + "\n\t" + intersection.toString();
     }
 
-    //FIX THIS:
     @Override
     public boolean equals(Object o) {
         if (o instanceof Event) {
@@ -68,64 +67,73 @@ public class Event {
                 Intersection i = e.getIntersection();
                 if (intersection instanceof ScanlineIntersection) {
                     if (i instanceof ScanlineIntersection) {
-                        ScanlineIntersection sIntersection = (ScanlineIntersection) intersection;
-                        ScanlineIntersection si = (ScanlineIntersection) i;
+                        return equalsForScanLineIntersectionEvent(e);
 
-                        Segment2D s1 = sIntersection.getSegment();
-                        Point2D p1 = sIntersection.getPoint();
-                        Segment2D s2 = si.getSegment();
-                        Point2D p2 = si.getPoint();
-
-                        if (s1.equals(s2)) {
-                            if(LineAndPointUtils.pointsAreEqual(p1,p2)){
-                                return true;
-                            }else{
-                                return false;
-                            }
-                        } else {
-                            return false;
-                        }
-
-                    } else {
-                        return false;
                     }
-
                 } else if (intersection instanceof SegmentsIntersection) {
                     if (i instanceof SegmentsIntersection) {
-
-                        SegmentsIntersection sIntersection = (SegmentsIntersection) intersection;
-                        SegmentsIntersection si = (SegmentsIntersection) i;
-
-                        Segment2D sa1 = sIntersection.getSegment1();
-                        Segment2D sa2 = sIntersection.getSegment2();
-                        Segment2D sb1 = si.getSegment1();
-                        Segment2D sb2 = si.getSegment2();
-                        Point2D p1 = sIntersection.getPoint();
-                        Point2D p2 = si.getPoint();
-
-                        if ((sa1.equals(sb1) && sa2.equals(sb2)) || (sa1.equals(sb2) && sa2.equals(sb1))) {
-                            if(LineAndPointUtils.pointsAreEqual(p1,p2)){
-                                return true;
-                            }else{
-                                return false;
-                            }
-
-                        } else {
-                            return false;
-                        }
-                    } else {
-                        return false;
+                        return equalsForSegmentsIntersectionEvent(e);
                     }
+                }
+            }
+        }
+        return false;
+
+    }
+
+    private boolean equalsForScanLineIntersectionEvent(Event e) {
+        Intersection i = e.getIntersection();
+        if (i instanceof ScanlineIntersection) {
+            ScanlineIntersection sIntersection = (ScanlineIntersection) intersection;
+            ScanlineIntersection si = (ScanlineIntersection) i;
+
+            Segment2D s1 = sIntersection.getSegment();
+            Point2D p1 = sIntersection.getPoint();
+            Segment2D s2 = si.getSegment();
+            Point2D p2 = si.getPoint();
+
+            if (s1.equals(s2)) {
+                if (LineAndPointUtils.pointsAreEqual(p1, p2)) {
+                    return true;
                 } else {
                     return false;
                 }
             } else {
                 return false;
             }
+
         } else {
             return false;
         }
+    }
 
+    private boolean equalsForSegmentsIntersectionEvent(Event e) {
+        Intersection i = e.getIntersection();
+        if (i instanceof SegmentsIntersection) {
+
+            SegmentsIntersection sIntersection = (SegmentsIntersection) intersection;
+            SegmentsIntersection si = (SegmentsIntersection) i;
+
+            Segment2D sa1 = sIntersection.getSegment1();
+            Segment2D sa2 = sIntersection.getSegment2();
+            Segment2D sb1 = si.getSegment1();
+            Segment2D sb2 = si.getSegment2();
+            Point2D p1 = sIntersection.getPoint();
+            Point2D p2 = si.getPoint();
+
+            if ((sa1.equals(sb1) && sa2.equals(sb2)) || (sa1.equals(sb2) && sa2.equals(sb1))) {
+                if (LineAndPointUtils.pointsAreEqual(p1, p2)) {
+                    return true;
+                } else {
+                    return false;
+                }
+
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -135,5 +143,4 @@ public class Event {
         hash = 17 * hash + (this.type != null ? this.type.hashCode() : 0);
         return hash;
     }
-    
 }

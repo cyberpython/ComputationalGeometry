@@ -33,7 +33,7 @@ import java.util.List;
 public class LineAndPointUtils {
 
     private static double errorTolerance = 0.001;
-
+    
     public static double getErrorTolerance(){
         return LineAndPointUtils.errorTolerance;
     }

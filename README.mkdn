@@ -1,104 +1,111 @@
 ComputationalGeometry - Computational Geometry Algorithms in Java
+-----------------------------------------------------------------
+Copyright (C) 2010 Georgios Migdos <cyberpython AT gmail DOT com><br/>
+<br/>
+This software was developed as an assignment for the "Special Topics On Algorithms" course at the [Athens Univesity Of Economics And Business](http://www.cs.aueb.gr/english/index.shtml) (Spring 2010).<br/>
+<br/>
+Available under the [MIT License](http://www.opensource.org/licenses/mit-license.php)<br/>
+<br/>
+Todo
+----
+Javadoc<br/>
+<br/>
+Implemented algorithms
+----------------------
+###Segment Intersections:
+* Bentley-Ottmann
 
-Copyright (C) 2010 Georgios Migdos <cyberpython AT gmail DOT com>
+###Convex Hull:
+* Graham's Scan
+* Jarvis' March (Gift Wrapping)
 
-This software was developed as an assignment
-for the "Special Topics On Algorithms" course
-at the Athens Univesity Of Economics And Business (Spring 2010).
-
-Available under the MIT License :
-http://www.opensource.org/licenses/mit-license.php
-
-Implemented algorithms:
-    Segment Intersections:
-        Bentley-Ottmann
-    Convex Hull:
-        Graham's Scan
-        Jarvis' March (Gift Wrapping)
-
-API:
-    aueb.geom.algorithms.Intersections
-        public static List<Intersection> bentleyOttmann(List<Segment2DEx> segments, List<LogEvent> eventLog);
-
-    aueb.geom.algorithms.ConvexHull
-        public static List<Point2D> grahamsScan(List<Point2D> points, List<LogEvent> events);
-        public static List<Point2D> jarvisMarch(List<Point2D> points, List<LogEvent> events);
-
-The last parameter of all 3 methods is a List<aueb.geom.algorithms.logging.LogEvent>
-that is filled with events(algorithm steps) as the method executes. MUST NOT be null.
-
-The Bentley-Ottmann implementation uses an ArrayList instead of a self-balancing binary search tree
-(e.g. a Red-Black tree) so its complexity is O((k*n+n^2)*log(n)) instead of O((k+n)*log(n)).
+API
+---
+####aueb.geom.algorithms.Intersections
+	public static List<Intersection> bentleyOttmann(List<Segment2DEx> segments, List<LogEvent> eventLog);
 
 
-Algorithms:
+####aueb.geom.algorithms.ConvexHull
+	public static List<Point2D> grahamsScan(List<Point2D> points, List<LogEvent> events);
+	public static List<Point2D> jarvisMarch(List<Point2D> points, List<LogEvent> events);
 
-    Bentley-Ottmann (http://en.wikipedia.org/wiki/Bentley-Ottmann_algorithm):
------------------------------------- BEGIN -------------------------------------
-    1)	Initialize a priority queue Q of potential future events, 
-    	each associated with a point in the plane and prioritized by the x-coordinate of the point. 
-    	Initially, Q contains an event for each of the endpoints of the input segments.
-    2)	Initialize a binary search tree T of the line segments that cross the sweep line L, 
-    	ordered by the y-coordinates of the crossing points. Initially, T is empty.
-    3)	While Q is nonempty, find and remove the event from Q associated with a point p with minimum x-coordinate.
-    	Determine what type of event this is and process it according to the following case analysis:
+
+<br/>
+The last parameter of all 3 methods is a List<aueb.geom.algorithms.logging.LogEvent> that is filled with events(algorithm steps) as the method executes. MUST NOT be null.<br/>
+<br/>
+The Bentley-Ottmann implementation uses an ArrayList instead of a self-balancing binary search tree (e.g. a Red-Black tree) so its complexity is O((k*n+n^2)*log(n)) instead of O((k+n)*log(n)).<br/>
+<br/>
+<br/>
+
+Algorithms
+----------
+
+###[Bentley-Ottmann](http://en.wikipedia.org/wiki/Bentley-Ottmann_algorithm):
+	------------------------------------ BEGIN -------------------------------------
+	    1)	Initialize a priority queue Q of potential future events, 
+	    	each associated with a point in the plane and prioritized by the x-coordinate of the point. 
+	    	Initially, Q contains an event for each of the endpoints of the input segments.
+	    2)	Initialize a binary search tree T of the line segments that cross the sweep line L, 
+	    	ordered by the y-coordinates of the crossing points. Initially, T is empty.
+	    3)	While Q is nonempty, find and remove the event from Q associated with a point p with minimum x-coordinate.
+	    	Determine what type of event this is and process it according to the following case analysis:
 	
-	*	If p is the left endpoint of a line segment s, insert s into T.
-		Find the segments r and t that are immediately below and above s in T (if they exist)
-		and if their crossing forms a potential future event in the event queue, remove it.
-		If s crosses r or t, add those crossing points as potential future events in the event queue.
+		*	If p is the left endpoint of a line segment s, insert s into T.
+			Find the segments r and t that are immediately below and above s in T (if they exist)
+			and if their crossing forms a potential future event in the event queue, remove it.
+			If s crosses r or t, add those crossing points as potential future events in the event queue.
 		
-	*	If p is the right endpoint of a line segment s, remove s from T.
-		Find the segments r and t that were (prior to the removal of s)
-		immediately above and below itin T (if they exist).
-		If r and t cross, add that crossing point as a potential future event in the event queue.
+		*	If p is the right endpoint of a line segment s, remove s from T.
+			Find the segments r and t that were (prior to the removal of s)
+			immediately above and below itin T (if they exist).
+			If r and t cross, add that crossing point as a potential future event in the event queue.
 		
-	*	If p is the crossing point of two segments s and t (with s below t to the left of the crossing),
-		swap the positions of s and t in T. Find the segments r and u (if they exist) that are immediately
-		below and above s and t respectively. Remove any crossing points rs and tu from the event queue, and,
-		if r and t cross or s and u cross, add those crossing points to the event queue.
-------------------------------------  END  -------------------------------------
+		*	If p is the crossing point of two segments s and t (with s below t to the left of the crossing),
+			swap the positions of s and t in T. Find the segments r and u (if they exist) that are immediately
+			below and above s and t respectively. Remove any crossing points rs and tu from the event queue, and,
+			if r and t cross or s and u cross, add those crossing points to the event queue.
+	------------------------------------  END  -------------------------------------
 
-    Graham's Scan (http://eclass.aueb.gr/modules/document/file.php/INF171/Έγγραφα/05-GEOMETRY.pdf - pg. 12):
------------------------------------- BEGIN -------------------------------------
-# Three points are a counter-clockwise turn if ccw > 0, clockwise if
-# ccw < 0, and collinear if ccw = 0 because ccw is a determinant that
-# gives the signed area of the triangle formed by p1, p2, and p3.
-function ccw(p1, p2, p3):
-    return (p2.x - p1.x)*(p3.y - p1.y) - (p2.y - p1.y)*(p3.x - p1.x)
+###[Graham's Scan](http://eclass.aueb.gr/modules/document/file.php/INF171/Έγγραφα/05-GEOMETRY.pdf):
+	------------------------------------ BEGIN -------------------------------------
+	Three points are a counter-clockwise turn if ccw > 0, clockwise if
+	ccw < 0, and collinear if ccw = 0 because ccw is a determinant that
+	gives the signed area of the triangle formed by p1, p2, and p3.
+		function ccw(p1, p2, p3):
+			return (p2.x - p1.x)*(p3.y - p1.y) - (p2.y - p1.y)*(p3.x - p1.x)
 
 
-p0 = the point with min y‐coordinate;
-<p1,p2,...,pm> : the remaining vertices in <Q>;
-PUSH(p0,S);
-PUSH(p1,S);
-PUSH(p2,S);
-for i=3 to m do
-{ while ccw(N‐TOP(S),TOP(S),pi) <= 0
-          do POP(S);
-  PUSH(pi,S);
-}
-return S;
-------------------------------------  END  -------------------------------------
+		p0 = the point with min y‐coordinate;
+		<p1,p2,...,pm> : the remaining vertices in <Q>;
+		PUSH(p0,S);
+		PUSH(p1,S);
+		PUSH(p2,S);
+		for i=3 to m do
+		{ while ccw(N‐TOP(S),TOP(S),pi) <= 0
+			  do POP(S);
+		  PUSH(pi,S);
+		}
+		return S;
+	------------------------------------  END  -------------------------------------
 
-    Jarvis' March(http://eclass.aueb.gr/modules/document/file.php/INF171/Έγγραφα/05-GEOMETRY.pdf - pg. 13)
------------------------------------- BEGIN -------------------------------------
-Start from the lowest point p0
-i=1;
-// for Right Chain
-REPEAT
-{ find the point pi with the smallest
-         polar angle  with pi‐1;
-     i=i+1;
-} UNTIL pi is the highest point
-// for Left Chain
-REPEAT
-{ find the point pi with the smallest
-        polar angle with pi‐1
-        for the negative axis;
-     i=i+1;
-} UNTIL pi is the lowest point
+###[Jarvis' March](http://eclass.aueb.gr/modules/document/file.php/INF171/Έγγραφα/05-GEOMETRY.pdf)
+	------------------------------------ BEGIN -------------------------------------
+		Start from the lowest point p0
+		i=1;
+		// for Right Chain
+		REPEAT
+		{ find the point pi with the smallest
+			 polar angle  with pi‐1;
+		     i=i+1;
+		} UNTIL pi is the highest point
+		// for Left Chain
+		REPEAT
+		{ find the point pi with the smallest
+			polar angle with pi‐1
+			for the negative axis;
+		     i=i+1;
+		} UNTIL pi is the lowest point
 
-------------------------------------  END  -------------------------------------
+	------------------------------------  END  -------------------------------------
 
 

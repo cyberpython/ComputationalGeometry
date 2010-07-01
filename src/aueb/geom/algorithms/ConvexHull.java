@@ -21,6 +21,7 @@
  */
 package aueb.geom.algorithms;
 
+import aueb.geom.LineAndPointUtils;
 import aueb.geom.Segment2D;
 import aueb.geom.algorithms.logging.convex_hull.grahams_scan.GrahamsScanCompleteEvent;
 import aueb.geom.algorithms.logging.convex_hull.grahams_scan.GrahamsScanSegmentAddEvent;
@@ -31,10 +32,13 @@ import aueb.geom.algorithms.logging.convex_hull.jarvis_march.JarvisChainsDetecte
 import aueb.geom.algorithms.logging.convex_hull.jarvis_march.JarvisPointSelectedEvent;
 import aueb.geom.algorithms.logging.convex_hull.jarvis_march.JarvisPointsCheckEvent;
 import aueb.geom.algorithms.logging.LogEvent;
+import java.awt.Point;
 import java.awt.geom.Point2D;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 
@@ -50,6 +54,33 @@ public class ConvexHull {
          * Sorts the points so that the lowest - leftmost one is the first.
          * Used by both Graham's and Jarvis's algorithms.
          */
+        public int compare(Point2D o1, Point2D o2) {
+            double y1 = o1.getY();
+            double y2 = o2.getY();
+            double yDiff = y1 - y2;
+            double errorTolerance = LineAndPointUtils.getErrorTolerance();
+            if (yDiff < -errorTolerance) {
+                return -1;
+            } else if (yDiff>errorTolerance) {
+                return 1;
+            } else{
+                double x1 = o1.getX();
+                double x2 = o2.getX();
+                double xDiff = x1 - x2;
+
+                if (xDiff < -errorTolerance) {
+                    return -1;
+                } else if (xDiff > errorTolerance) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+        }
+    }
+
+    /*static class PointComparator implements Comparator<Point2D> {
+
         public int compare(Point2D o1, Point2D o2) {
             double y1 = o1.getY();
             double y2 = o2.getY();
@@ -70,7 +101,7 @@ public class ConvexHull {
                 return 1;
             }
         }
-    }
+    }*/
 
     static class PolarAngleComparator implements Comparator<Point2D> {
 
@@ -85,6 +116,7 @@ public class ConvexHull {
          * Used by both Graham's and Jarvis's algorithms.
          */
         public int compare(Point2D p1, Point2D p2) {
+
             Double theta1 = polarAngle(p0, p1);
             Double theta2 = polarAngle(p0, p2);
 
@@ -96,15 +128,35 @@ public class ConvexHull {
                 theta2 = new Double(0);
             }
 
+            if(p1.equals(p0)){
+                theta1 = -500.0;
+            }
+
+            if(p2.equals(p0)){
+                theta2 = -500.0;
+            }
+
             if (theta1 < theta2) {
                 return -1;
             } else if (theta1 == theta2) {
-                return 0;
+                double errorTolerance = LineAndPointUtils.getErrorTolerance();
+                double x1 = p1.getX();
+                double x2 = p2.getX();
+                double xDiff = x1 - x2;
+
+                if (xDiff < -errorTolerance) {
+                    return -1;
+                } else if (xDiff > errorTolerance) {
+                    return 1;
+                } else {
+                    return 0;
+                }
             } else {
                 return 1;
             }
         }
     }
+
 
     private static Double polarAngle(Point2D p0, Point2D p1) {
         if (p0.equals(p1)) {
@@ -238,14 +290,129 @@ public class ConvexHull {
 
             //----------------- Start of Graham's Scan
 
+            ArrayDeque<Point2D> s = new ArrayDeque<Point2D>();
+
             Collections.sort(points, new PointComparator());
             Point2D startingPoint = points.get(0);
 
+            for(int i=0; i<30; i++){
+                System.out.println();
+            }
+            int j=0;
+            boolean stop=false;
+            while(j<points.size() && !stop){
+                Point2D p = points.get(j);
+                if(p.getY()>startingPoint.getY()){
+                    break;
+                }
+                if(p.equals(startingPoint)){
+                    System.out.print("S--> ");
+                }
+                System.out.println(p.toString());
+                j++;
+            }
+
             Collections.sort(points, new PolarAngleComparator(startingPoint));
+
+            s.push(startingPoint);
+            s.push(points.get(1));
+            s.push(points.get(2));
+
+            Point2D top = points.get(2);
+            Point2D nTop = points.get(1);
+
+            events.add(new GrahamsScanSegmentAddEvent(new Segment2D(points.get(0), nTop)));
+            events.add(new GrahamsScanSegmentAddEvent(new Segment2D(nTop, top)));
+
+            int m = points.size();
+            for (int i = 3; i < m; i++) {
+                
+                events.add(new GrahamsScanSegmentCheckEvent(new Segment2D(nTop, top), new Segment2D(top, points.get(i))));
+                while ((s.size()>1) && ccw(nTop, top, points.get(i)) <= 0) {
+
+                    events.add(new GrahamsScanSegmentRemoveEvent(new Segment2D(nTop, top)));
+                    s.pop();
+
+                    nTop = peekNTop(s);
+                    top = s.peekFirst();
+                    
+                    if(s.size()>1){
+                        events.add(new GrahamsScanSegmentCheckEvent(new Segment2D(nTop, top), new Segment2D(top, points.get(i))));
+                    }
+                }
+
+                s.push(points.get(i));
+
+                nTop = peekNTop(s);
+                top = s.peekFirst();
+
+                events.add(new GrahamsScanSegmentAddEvent(new Segment2D(nTop, top)));
+
+            }
+
+            s.push(startingPoint);
+
+            events.add(new GrahamsScanSegmentAddEvent(new Segment2D(top, points.get(0))));
+            events.add(new GrahamsScanCompleteEvent());
+
+            //----------------- End of Graham's Scan
+
+            for (Iterator<Point2D> it = s.descendingIterator(); it.hasNext();) {
+                Point2D point2D = it.next();
+                result.add(point2D);
+            }
+
+
+        }
+        return result;
+
+    }
+
+
+    private static Point2D peekNTop(Deque<Point2D> s){
+        Point2D top = s.pop();
+        Point2D result = s.peekFirst();
+        s.push(top);
+        return result;
+    }
+
+
+    
+     public static List<Point2D> grahamsScan2(List<Point2D> points, List<LogEvent> events) {
+
+        events.clear();
+
+        List<Point2D> result = new ArrayList<Point2D>();
+
+        if (points.size() > 2) {
+
+            //----------------- Start of Graham's Scan
+
+            Collections.sort(points, new PointComparator());
+            Point2D startingPoint = points.get(0);
+            Point2D highestPoint = points.get(points.size() - 1);
+
+            for (int i = 0; i < 30; i++) {
+                System.out.println();
+            }
+
+            int j=0;
+            boolean stop=false;
+            while(j<points.size() && !stop){
+                Point2D p = points.get(j);
+                if(p.getY()>startingPoint.getY()){
+                    break;
+                }
+                System.out.println(p.toString());
+                j++;
+            }
+
+            Collections.sort(points, new PolarAngleComparator(startingPoint));
+
 
             Point2D endPoint = points.get(points.size() - 1);
 
-            
+
             //System.out.println("PUSH: "+points.get(0));
             //System.out.println("PUSH: "+points.get(1));
             //System.out.println("ADD    :"+points.get(0)+" -> "+points.get(1));
@@ -268,7 +435,7 @@ public class ConvexHull {
                 }
 
                 m++;
-                
+
                 //swap(points, m, i);
                 Collections.swap(points, m, i);
 
