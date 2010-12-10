@@ -6,6 +6,13 @@ This software was developed as an assignment for the "Special Topics On Algorith
 <br/>
 Available under the [MIT License](http://www.opensource.org/licenses/mit-license.php)<br/>
 <br/>
+
+
+Screenshots
+-----------------------------------------------------------------
+<a href="ComputationalGeometry/raw/master/screenshots/screenshot.png">![Screenshot1][screenshot1]</a>
+[screenshot1]: ComputationalGeometry/raw/master/screenshots/screenshot_th.png  "Screenshot"
+
 Todo
 ----
 Javadoc<br/>
